@@ -47,15 +47,12 @@ public class AppBlacklistActivity extends AppCompatActivity {
         }
     };
 
-    private SharedPreferences sharedPrefs;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_appblacklist);
 
         final PackageManager pm = getPackageManager();
-        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         final List<ApplicationInfo> packageList = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         ListView appListView = (ListView) findViewById(R.id.appListView);
@@ -112,6 +109,7 @@ public class AppBlacklistActivity extends AppCompatActivity {
                 } else {
                     GBApplication.removeFromBlacklist(packageName);
                 }
+                adapter.notifyDataSetChanged();
             }
         });
 
