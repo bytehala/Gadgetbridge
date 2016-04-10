@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
@@ -26,6 +27,7 @@ import android.widget.TextView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -47,6 +49,42 @@ public class AppBlacklistActivity extends AppCompatActivity {
         }
     };
 
+    private static class AppInfoWrapper {
+
+        private final String packageName;
+        private final CharSequence appName;
+        private final Drawable icon;
+        private boolean isChecked;
+
+        public AppInfoWrapper(ApplicationInfo info, PackageManager pm) {
+            packageName = info.packageName;
+            appName = info.loadLabel(pm);
+            icon = info.loadIcon(pm);
+            isChecked = false;
+        }
+
+        public void setChecked(boolean checked) {
+            isChecked = checked;
+        }
+
+        public boolean getChecked() {
+            return isChecked;
+        }
+
+        public Drawable getIcon() {
+            return icon;
+        }
+
+        public String getPackageName() {
+            return packageName;
+        }
+
+        public CharSequence getAppName() {
+            return appName;
+        }
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,10 +92,14 @@ public class AppBlacklistActivity extends AppCompatActivity {
 
         final PackageManager pm = getPackageManager();
 
-        final List<ApplicationInfo> packageList = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<AppInfoWrapper> packageList = new ArrayList<>();
+        for(ApplicationInfo info : packages) {
+            packageList.add(new AppInfoWrapper(info, pm));
+        }
         ListView appListView = (ListView) findViewById(R.id.appListView);
 
-        final ArrayAdapter<ApplicationInfo> adapter = new ArrayAdapter<ApplicationInfo>(this, R.layout.item_with_checkbox, packageList) {
+        final ArrayAdapter<AppInfoWrapper> adapter = new ArrayAdapter<AppInfoWrapper>(this, R.layout.item_with_checkbox, packageList) {
             @Override
             public View getView(int position, View view, ViewGroup parent) {
                 if (view == null) {
@@ -65,21 +107,21 @@ public class AppBlacklistActivity extends AppCompatActivity {
                     view = inflater.inflate(R.layout.item_with_checkbox, parent, false);
                 }
 
-                ApplicationInfo appInfo = packageList.get(position);
+                AppInfoWrapper appInfo = packageList.get(position);
                 TextView deviceAppVersionAuthorLabel = (TextView) view.findViewById(R.id.item_details);
                 TextView deviceAppNameLabel = (TextView) view.findViewById(R.id.item_name);
                 ImageView deviceImageView = (ImageView) view.findViewById(R.id.item_image);
                 CheckBox checkbox = (CheckBox) view.findViewById(R.id.item_checkbox);
 
                 deviceAppVersionAuthorLabel.setText(appInfo.packageName);
-                deviceAppNameLabel.setText(appInfo.loadLabel(pm));
-                deviceImageView.setImageDrawable(appInfo.loadIcon(pm));
+                deviceAppNameLabel.setText(appInfo.getAppName());
+                deviceImageView.setImageDrawable(appInfo.getIcon());
 
                 checkbox.setChecked(GBApplication.blacklist.contains(appInfo.packageName));
 
-                Collections.sort(packageList, new Comparator<ApplicationInfo>() {
+                Collections.sort(packageList, new Comparator<AppInfoWrapper>() {
                     @Override
-                    public int compare(ApplicationInfo ai1, ApplicationInfo ai2) {
+                    public int compare(AppInfoWrapper ai1, AppInfoWrapper ai2) {
                         boolean blacklisted1 = GBApplication.blacklist.contains(ai1.packageName);
                         boolean blacklisted2 = GBApplication.blacklist.contains(ai2.packageName);
 
