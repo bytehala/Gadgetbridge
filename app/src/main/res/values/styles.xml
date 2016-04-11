@@ -6,7 +6,7 @@
         <item name="android:textColor">@color/primarytext</item>
         <item name="colorPrimary">@color/primary_light</item>
         <item name="colorPrimaryDark">@color/primarydark_light</item>
-        <item name="colorAccent">@color/accent</item>
+        <item name="colorAccent">@color/accent_states</item>
     </style>
 
     <style name="GadgetbridgeActionBar" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">

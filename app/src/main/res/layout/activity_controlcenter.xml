@@ -26,6 +26,7 @@
         android:paddingTop="0px">
 
     <ListView
+        tools:listitem="@layout/device_item"
         android:id="@+id/deviceListView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
