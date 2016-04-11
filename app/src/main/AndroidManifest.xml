@@ -58,7 +58,7 @@
             android:label="@string/title_activity_appmanager"
             android:parentActivityName=".activities.ControlCenter" />
         <activity
-            android:name=".activities.AppBlacklistActivity"
+            android:name=".activities.blacklist.AppBlacklistActivity"
             android:label="@string/title_activity_appblacklist"
             android:parentActivityName=".activities.SettingsActivity" />
         <activity
