@@ -124,6 +124,7 @@ public class AppBlacklistActivity extends AppCompatActivity  implements OnAppLis
 //        IntentFilter filter = new IntentFilter();
 //        filter.addAction(GBApplication.ACTION_QUIT);
 //
+    // TODO This BroadcastManager can.
 //        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
 //    }
 
@@ -145,6 +146,7 @@ public class AppBlacklistActivity extends AppCompatActivity  implements OnAppLis
 
     @Override
     public void blacklist(String packageName) {
+        // TODO This can be improved
         List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
         AppList blackAppList = (AppList) fragmentList.get(0);
         blackAppList.addToList(packageName);
@@ -152,6 +154,7 @@ public class AppBlacklistActivity extends AppCompatActivity  implements OnAppLis
 
     @Override
     public void whitelist(String packageName) {
+        // TODO This can be improved
         List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
         AppList whiteAppList = (AppList) fragmentList.get(1);
         whiteAppList.addToList(packageName);

@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +27,8 @@ import java.util.Set;
 
 import nodomain.freeyourgadget.gadgetbridge.GBApplication;
 import nodomain.freeyourgadget.gadgetbridge.R;
+import nodomain.freeyourgadget.gadgetbridge.activities.blacklist.recyclerview.AppInfoWrapper;
+import nodomain.freeyourgadget.gadgetbridge.activities.blacklist.recyclerview.AppListAdapter;
 
 public class AppListFragment extends Fragment implements AppList {
 
@@ -39,8 +43,10 @@ public class AppListFragment extends Fragment implements AppList {
     }
 
     private int mPage;
-    private ArrayAdapter<AppInfoWrapper> adapter;
+    private RecyclerView.Adapter adapter;
     private Identity identity;
+
+    // TODO Save fragment contents for rotation.
 
     @Override
     public void onAttach(Context context) {
@@ -79,45 +85,46 @@ public class AppListFragment extends Fragment implements AppList {
         }
 
         // both blacklisted or both not blacklisted = sort by alphabet
-        adapter = new ArrayAdapter<AppInfoWrapper>(getActivity(), R.layout.item_with_checkbox, packageList) {
-            @Override
-            public View getView(int position, View view, ViewGroup parent) {
-                if (view == null) {
-                    LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    view = inflater.inflate(R.layout.item_with_checkbox, parent, false);
-                }
-
-                AppInfoWrapper appInfo = packageList.get(position);
-                TextView deviceAppVersionAuthorLabel = (TextView) view.findViewById(R.id.item_details);
-                TextView deviceAppNameLabel = (TextView) view.findViewById(R.id.item_name);
-                ImageView deviceImageView = (ImageView) view.findViewById(R.id.item_image);
-                CheckBox checkbox = (CheckBox) view.findViewById(R.id.item_checkbox);
-
-                deviceAppVersionAuthorLabel.setText(appInfo.packageName);
-                deviceAppNameLabel.setText(appInfo.getAppName());
-                deviceImageView.setImageDrawable(appInfo.getIcon());
-
-                checkbox.setChecked(GBApplication.blacklist.contains(appInfo.packageName));
-
-                Collections.sort(packageList, new Comparator<AppInfoWrapper>() {
-                    @Override
-                    public int compare(AppInfoWrapper ai1, AppInfoWrapper ai2) {
-                        boolean blacklisted1 = GBApplication.blacklist.contains(ai1.packageName);
-                        boolean blacklisted2 = GBApplication.blacklist.contains(ai2.packageName);
-
-                        if ((blacklisted1 && blacklisted2) || (!blacklisted1 && !blacklisted2)) {
-                            // both blacklisted or both not blacklisted = sort by alphabet
-                            return ai1.packageName.compareTo(ai2.packageName);
-                        } else if (blacklisted1) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
-                    }
-                });
-                return view;
-            }
-        };
+        adapter = new AppListAdapter(packageList);
+//                new ArrayAdapter<AppInfoWrapper>(getActivity(), R.layout.item_with_checkbox, packageList) {
+//            @Override
+//            public View getView(int position, View view, ViewGroup parent) {
+//                if (view == null) {
+//                    LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                    view = inflater.inflate(R.layout.item_with_checkbox, parent, false);
+//                }
+//
+//                AppInfoWrapper appInfo = packageList.get(position);
+//                TextView deviceAppVersionAuthorLabel = (TextView) view.findViewById(R.id.item_details);
+//                TextView deviceAppNameLabel = (TextView) view.findViewById(R.id.item_name);
+//                ImageView deviceImageView = (ImageView) view.findViewById(R.id.item_image);
+//                CheckBox checkbox = (CheckBox) view.findViewById(R.id.item_checkbox);
+//
+//                deviceAppVersionAuthorLabel.setText(appInfo.packageName);
+//                deviceAppNameLabel.setText(appInfo.getAppName());
+//                deviceImageView.setImageDrawable(appInfo.getIcon());
+//
+//                checkbox.setChecked(GBApplication.blacklist.contains(appInfo.packageName));
+//
+//                Collections.sort(packageList, new Comparator<AppInfoWrapper>() {
+//                    @Override
+//                    public int compare(AppInfoWrapper ai1, AppInfoWrapper ai2) {
+//                        boolean blacklisted1 = GBApplication.blacklist.contains(ai1.packageName);
+//                        boolean blacklisted2 = GBApplication.blacklist.contains(ai2.packageName);
+//
+//                        if ((blacklisted1 && blacklisted2) || (!blacklisted1 && !blacklisted2)) {
+//                            // both blacklisted or both not blacklisted = sort by alphabet
+//                            return ai1.packageName.compareTo(ai2.packageName);
+//                        } else if (blacklisted1) {
+//                            return -1;
+//                        } else {
+//                            return 1;
+//                        }
+//                    }
+//                });
+//                return view;
+//            }
+//        };
 
 
     }
@@ -127,36 +134,39 @@ public class AppListFragment extends Fragment implements AppList {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ListView appListView = identity == Identity.WHITELIST ?
-                (ListView) inflater.inflate(R.layout.fragment_applist, container, false) :
-                (ListView) inflater.inflate(R.layout.fragment_blacklist, container, false);
+        RecyclerView recyclerView =
+                (RecyclerView) inflater.inflate(R.layout.fragment_applist, container, false);
 
-        appListView.setAdapter(adapter);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
 
-        appListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView parent, View v, int position, long id) {
-                String packageName = packageList.get(position).packageName;
-                CheckBox checkBox = ((CheckBox) v.findViewById(R.id.item_checkbox));
-                checkBox.toggle();
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(adapter);
 
-                if (checkBox.isChecked()) {
-                    GBApplication.addToBlacklist(packageName);
-                } else {
-                    GBApplication.removeFromBlacklist(packageName);
-                }
-                adapter.remove(adapter.getItem(position));
-                adapter.notifyDataSetChanged();
-                if (identity == Identity.WHITELIST) {
-                    mCallback.whitelist(packageName);
-                } else {
-                    mCallback.blacklist(packageName);
-                }
-            }
-        });
+        // TODO RecyclerView has its own ItemTouchListener
+//        appListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView parent, View v, int position, long id) {
+//                String packageName = packageList.get(position).packageName;
+//                CheckBox checkBox = ((CheckBox) v.findViewById(R.id.item_checkbox));
+//                checkBox.toggle();
+//
+//                if (checkBox.isChecked()) {
+//                    GBApplication.addToBlacklist(packageName);
+//                } else {
+//                    GBApplication.removeFromBlacklist(packageName);
+//                }
+//                adapter.remove(adapter.getItem(position));
+//                adapter.notifyDataSetChanged();
+//                if (identity == Identity.WHITELIST) {
+//                    mCallback.whitelist(packageName);
+//                } else {
+//                    mCallback.blacklist(packageName);
+//                }
+//            }
+//        });
 
-        // TODO Add Quit BroadcastListener
-        return appListView;
+        return recyclerView;
     }
 
     @Override
@@ -201,39 +211,5 @@ public class AppListFragment extends Fragment implements AppList {
         return result;
     }
 
-    private static class AppInfoWrapper {
 
-        private final String packageName;
-        private final CharSequence appName;
-        private final Drawable icon;
-        private boolean isChecked;
-
-        public AppInfoWrapper(ApplicationInfo info, PackageManager pm) {
-            packageName = info.packageName;
-            appName = info.loadLabel(pm);
-            icon = info.loadIcon(pm);
-            isChecked = false;
-        }
-
-        public void setChecked(boolean checked) {
-            isChecked = checked;
-        }
-
-        public boolean getChecked() {
-            return isChecked;
-        }
-
-        public Drawable getIcon() {
-            return icon;
-        }
-
-        public String getPackageName() {
-            return packageName;
-        }
-
-        public CharSequence getAppName() {
-            return appName;
-        }
-
-    }
 }
