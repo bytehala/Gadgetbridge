@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
@@ -35,7 +36,8 @@ public class AppBlacklistActivity extends AppCompatActivity  implements OnAppLis
         }
     };
 
-
+    private AppList blacklist;
+    private AppList whitelist;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,17 +77,49 @@ public class AppBlacklistActivity extends AppCompatActivity  implements OnAppLis
 
     @Override
     public void whitelist(String packageName) {
-        // TODO This can be improved
-        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
-        AppList blackAppList = (AppList) fragmentList.get(1);
-        blackAppList.addToList(packageName);
+        whitelist = getWhitelist();
+        if (whitelist != null) {
+            whitelist.addToList(packageName);
+        }
     }
 
     @Override
     public void blacklist(String packageName) {
-        // TODO This can be improved
-        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
-        AppList whiteAppList = (AppList) fragmentList.get(0);
-        whiteAppList.addToList(packageName);
+        blacklist = getBlacklist();
+        if (blacklist != null) {
+            blacklist.addToList(packageName);
+        }
+    }
+
+    // TODO This can be improved
+    @Nullable
+    private AppList getBlacklist() {
+        if (blacklist == null || blacklist.getIdentity() != AppListFragment.Identity.BLACKLIST) {
+            List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
+            for(Fragment fragment : fragmentList) {
+                AppList appList = (AppList) fragment;
+                if (appList.getIdentity() == AppListFragment.Identity.BLACKLIST) {
+                    blacklist = appList;
+                    return blacklist;
+                }
+            }
+        }
+        return blacklist;
+    }
+
+    // TODO This can be improved
+    @Nullable
+    private AppList getWhitelist() {
+        if (whitelist == null || whitelist.getIdentity() != AppListFragment.Identity.WHITELIST) {
+            List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
+            for(Fragment fragment : fragmentList) {
+                AppList appList = (AppList) fragment;
+                if (appList.getIdentity() == AppListFragment.Identity.WHITELIST) {
+                    whitelist = appList;
+                    return whitelist;
+                }
+            }
+        }
+        return whitelist;
     }
 }

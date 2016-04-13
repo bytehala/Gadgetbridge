@@ -139,6 +139,11 @@ public class AppListFragment extends Fragment implements AppList {
         }
     }
 
+    @Override
+    public Identity getIdentity() {
+        return identity;
+    }
+
     private ApplicationInfo getApplicationInfo(String packageName) {
         ApplicationInfo result = null;
         try {
