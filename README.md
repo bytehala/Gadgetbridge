@@ -1,10 +1,11 @@
 Gadgetbridge [![Build Status](https://travis-ci.org/bytehala/Gadgetbridge.svg?branch=master)](https://travis-ci.org/bytehala/Gadgetbridge)
 ============
 
+> This is my development fork. Please refer to the original project for the latest changes.
+
 Gadgetbridge is an Android (4.4+) Application which will allow you to use your
 Pebble or Mi Band without the vendor's closed source application and without the
 need to create an account and transmit any of your data to the vendor's servers.
-
 
 ## Download
 
